@@ -100,7 +100,13 @@ def employe_delete(request,id):
     employee_obj=Employee.objects.get(id=id)
     print(employee_obj,'2222222222')
     employee_obj.delete()
-    return Response("Employee is deleted successfully")        
+    return Response("Employee is deleted successfully")
+@api_view(['DELETE'])  
+def employe_delete(request,id):
+    employee_obj=Employee.objects.get(id=id)
+    print(employee_obj,'2222222222')
+    employee_obj.delete()
+    return Response("Employee is deleted successfully")     
 
 # Mixin GenericAPIView
 class Employee_list(ListModelMixin,GenericAPIView):
