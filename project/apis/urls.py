@@ -19,24 +19,31 @@ from .views import *
 from apis import views
 from rest_framework.routers import DefaultRouter
 
-router = DefaultRouter()
-router.register('employee', views.employeeviewset, basename='employee')
+employee_router = DefaultRouter()
+employee_router.register('employee', views.employeeviewset, basename='employee')
 
-router = DefaultRouter()
-router.register('employeemodal', views.employeemodalviewset, basename='employee')
+# DefaultRouter for EmployeeModalViewSet
+employee_modal_router = DefaultRouter()
+employee_modal_router.register('employeemodal', views.employeemodalviewset, basename='employeemodal')
 
-router = DefaultRouter()
-router.register('employeehyper', views.employeehyperviewset, basename='employee')
+# DefaultRouter for EmployeeHyperViewSet
+employee_hyper_router = DefaultRouter()
+employee_hyper_router.register('employeehyper', views.employeehyperviewset, basename='employeehyper')
+
 
 urlpatterns = [
     #api view decorator
     path('', home),
+     path('generate-pdf/', views.generate_pdf, name='generate_pdf'),
+
+
     path('add/', employe_post),
     path('update/<int:id>', employe_update),
     path('delete/<int:id>', employe_delete),
 
-    #generic api view
+    #generic api view Mixins
     path('list/', views.Employee_list.as_view()),
+    path('create/', views.Employee_create.as_view()),
     path('retrieve/<int:pk>/', views.Employee_retrieve.as_view()),
     path('update_mixin/<int:pk>/', views.Employee_update.as_view()),
     path('destroy/<int:pk>/', views.Employee_delete.as_view()),
@@ -53,15 +60,16 @@ urlpatterns = [
     path('api_retrive_delete/<int:pk>/', views.employeeretrievedelete.as_view()),
     path('api_retrive_update_delete/<int:pk>/', views.employeeretrieveupdatedestroy.as_view()),
 
-    #viewset
-    path('api/',include(router.urls)),
+    path('api/', include(employee_router.urls)),
 
-    #modal viewset
-    path('modalapi/',include(router.urls)),
-    #in modal viewset LOGINS
-    path('auth/',include('rest_framework.urls', namespace='rest_framework.urls')),
-    # hyper viewset i t will come hyperlink for id
-    path('hyperapi/',include(router.urls)),
+    # API for EmployeeModalViewSet
+    path('modalapi/', include(employee_modal_router.urls)),
+
+    # API for EmployeeHyperViewSet
+    path('hyperapi/', include(employee_hyper_router.urls)),
+
+    # Auth URLs for login/logout (used in modal viewset)
+    path('auth/', include('rest_framework.urls', namespace='rest_framework')),
 
 ]
 

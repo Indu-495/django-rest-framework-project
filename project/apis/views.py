@@ -13,13 +13,45 @@ from rest_framework import viewsets
 from rest_framework.authentication import BasicAuthentication,SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
+# views.py
 
-#hyper viewset
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from reportlab.pdfgen import canvas
+from datetime import datetime
+
+@csrf_exempt
+def generate_pdf(request):
+    if request.method == 'POST':
+        from_date = request.POST.get('from_date')
+        to_date = request.POST.get('to_date')
+        organisation = request.POST.get('organisation')
+
+        # Generate the PDF
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="report.pdf"'
+
+        # Create a canvas and write text to the PDF
+        p = canvas.Canvas(response)
+        p.setFont("Helvetica", 12)
+        p.drawString(100, 700, "From: " + from_date)
+        p.drawString(100, 670, "To: " + to_date)
+        p.drawString(100, 640, "Organisation: " + organisation)
+        p.drawString(100, 610, "Generated at: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        p.showPage()
+        p.save()
+
+        return response
+
+    return render(request, 'template.html')
+
+
+#hyper viewset by wrinting one classs we can do all CRUD operations and the id become url
 class employeehyperviewset(viewsets.ModelViewSet):
     queryset=Employee.objects.all()
     serializer_class=employeehyperserializer
 
-#modal viewset
+#model viewset based one class we do all crud operations 
 class employeemodalviewset(viewsets.ModelViewSet):
     queryset=Employee.objects.all()
     serializer_class=EmployeeSerializer
@@ -81,9 +113,9 @@ def employe_post(request):
     serializers=EmployeeSerializer(data=request.data)
     if serializers.is_valid():
         serializers.save()
-        return Response({'status':200,"payload":serializers.data})
+        return Response({'status':"Success","payload":serializers.data})
     else:
-        return Response({'status':400,"payload":serializers.errors})    
+        return Response({'status':"Bad Request","payload":serializers.errors})    
 @api_view(['POST'])
 def employe_update(request,id):
     employee_obj=Employee.objects.get(id=id)
@@ -140,15 +172,19 @@ class employeelist(ListAPIView):
     queryset=Employee.objects.all()
     serializer_class=EmployeeSerializer
 
+
 class employeecreate(CreateAPIView):
     queryset=Employee.objects.all()
     serializer_class=EmployeeSerializer
+
 class employeeretrieve(RetrieveAPIView):
     queryset=Employee.objects.all()
-    serializer_class=EmployeeSerializer    
+    serializer_class=EmployeeSerializer   
+
 class employeeupdate(UpdateAPIView):
     queryset=Employee.objects.all()
-    serializer_class=EmployeeSerializer   
+    serializer_class=EmployeeSerializer  
+
 class employeedelete(DestroyAPIView):
     queryset=Employee.objects.all()
     serializer_class=EmployeeSerializer 

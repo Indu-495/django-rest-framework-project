@@ -1,0 +1,24 @@
+<!-- template.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PDF</title>
+</head>
+<body>
+    <h1>Generate PDF</h1>
+    <form action="{% url 'generate_pdf' %}" method="post">
+        {% csrf_token %}
+        <label for="from_date">From Date:</label>
+        <input type="date" name="from_date" required><br><br>
+        
+        <label for="to_date">To Date:</label>
+        <input type="date" name="to_date" required><br><br>
+        
+        <label for="organisation">Organisation:</label>
+        <input type="text" name="organisation" required><br><br>
+        
+        <input type="submit" value="Generate PDF">
+    </form>
+</body>
+</html>
