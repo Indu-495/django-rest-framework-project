@@ -14,6 +14,11 @@ python manage.py makemigrations
 python manage.py migrate
 python manage.py create superuser
 
+
+changesin settings.py
+
 1) APIVIEW decorator
+ which takes list of http methods that the view respond to
+@api_view['GET','POST','PUT','DELETE']
 
 htyjuokuiliolkygujiryi676i79iyjhgj
