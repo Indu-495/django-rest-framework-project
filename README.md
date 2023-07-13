@@ -16,3 +16,4 @@ python manage.py create superuser
 
 1) APIVIEW decorator
 
+htyjuokuiliolkygujiryi676i79iyjhgj
