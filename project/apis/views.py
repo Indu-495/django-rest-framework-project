@@ -1,7 +1,10 @@
+import io
+import os
 from django.shortcuts import render
 
 # Create your views here.
 from django.shortcuts import render
+import requests
 from .models import *
 from .serializers import *
 from rest_framework.response import Response
@@ -15,38 +18,168 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 # views.py
 
-from django.http import HttpResponse
+from django.http import FileResponse, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.pdfgen import canvas
 from datetime import datetime
+import openpyxl
+from openpyxl.utils import get_column_letter
+from openpyxl.drawing.image import Image
 
-@csrf_exempt
-def generate_pdf(request):
+import openpyxl
+from openpyxl.utils import get_column_letter
+from openpyxl.drawing.image import Image
+
+from django.http import HttpResponse
+from django.shortcuts import render
+from datetime import datetime
+from .models import CallReportMaster
+from django.shortcuts import render
+
+def create_html(request):
     if request.method == 'POST':
+        # Handle the form submission and API interaction
+        emp_id = request.POST.get('emp_id')
+        name = request.POST.get('name')
+        month = request.POST.get('month')
+        pf_status = request.POST.get('pf_status')
+        gross = request.POST.get('gross')
+        net_days = request.POST.get('net_days')
+        arrears = request.POST.get('arrears')
+        shift_allowance = request.POST.get('shift_allowance')
+
+        # Perform any necessary validation or data processing
+
+        # Call the API endpoint to create the employee
+        api_url = 'http://127.0.0.1:8000/create/'
+        payload = {
+            'emp_id': emp_id,
+            'name': name,
+            'month': month,
+            'pf_status': pf_status,
+            'gross': gross,
+            'net_days': net_days,
+            'arrears': arrears,
+            'shift_allowance': shift_allowance
+        }
+
+        response = requests.post(api_url, data=payload)
+        if response.ok:
+            # Employee created successfully
+            return render(request, 'create.html')
+        else:
+            # Handle the API error
+            error_message = 'An error occurred while creating the employee.'
+            return render(request, 'error.html', {'message': error_message})
+
+    # If it's a GET request, simply render the HTML form
+    return render(request, 'create.html')
+
+
+
+
+def list_html(request):
+    return render(request,'list.html')
+
+def generate_excel_html(request):
+    if request.method == 'POST':
+        # Get the values from the HTML form
         from_date = request.POST.get('from_date')
         to_date = request.POST.get('to_date')
-        organisation = request.POST.get('organisation')
 
-        # Generate the PDF
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="report.pdf"'
+        # Make a POST request to the generate_excel API endpoint
+        response = requests.post('http://127.0.0.1:8000/generate_excel/', data={
+            'from_date': from_date,
+            'to_date': to_date
+        })
 
-        # Create a canvas and write text to the PDF
-        p = canvas.Canvas(response)
-        p.setFont("Helvetica", 12)
-        p.drawString(100, 700, "From: " + from_date)
-        p.drawString(100, 670, "To: " + to_date)
-        p.drawString(100, 640, "Organisation: " + organisation)
-        p.drawString(100, 610, "Generated at: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        p.showPage()
-        p.save()
+        # Check if the request was successful
+        if response.status_code == 200:
+            # Get the file content from the response
+            file_content = response.content
+            file_name = response.headers['Content-Disposition'].split('=')[1].replace('"', '')
+
+            # Define the directory where you want to save the Excel file
+            save_directory = 'C:/INDU/django_project/django rest framework project/'
+
+            # Create the file path by joining the directory and file name
+            file_path = os.path.join(save_directory, file_name)
+
+            # Write the file content to the specified file path
+            with open(file_path, 'wb') as file:
+                file.write(file_content)
+
+            # TODO: Process the response as needed
+            # For example, you can save the Excel file or display a success message
+            return HttpResponse(f'Excel file generated successfully. File name: {file_name}, File path: {file_path}')
+        else:
+            # Handle the case where the request was not successful
+            # You can display an error message or redirect to an error page
+            return HttpResponse('Error: Unable to generate the Excel file.')
+    else:
+        # Render the HTML template
+        return render(request, 'template.html')
+
+
+@api_view(['POST'])
+def generate_excel(request):
+    print(request.data, request.method, "###############################")
+    if request.method == 'POST':
+        from_date = request.data.get('from_date')
+        to_date = request.data.get('to_date')
+
+        # Retrieve data from the database
+        data = CallReportMaster.objects.filter(date__range=(from_date, to_date)).values(
+            'sno', 'emp_id', 'ref_type', 'unique_id', 'name', 'design', 'contact', 'camp', 'camp_details',
+            'date', 'time', 'location', 'latitude', 'longitude', 'area', 'city', 'state', 'pincode',
+            'district', 'station', 'branch', 'source', 'attendance', 'reason', 'type', 'ldate', 'category', 'status'
+        )
+        
+        # Create a new workbook and select the active sheet
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+
+        # Set column names
+        column_names = [
+            'Sno', 'Emp ID', 'Ref Type', 'Unique ID', 'Name', 'Design', 'Contact', 'Camp', 'Camp Details', 'Date',
+            'Time', 'Location', 'Latitude', 'Longitude', 'Area', 'City', 'State', 'Pincode', 'District', 'Station',
+            'Branch', 'Source', 'Attendance', 'Reason', 'Type', 'Ldate', 'Category', 'Status',
+        ]
+
+        # Write column names to the first row of the sheet
+        for col_num, column_name in enumerate(column_names, 1):
+            col_letter = openpyxl.utils.get_column_letter(col_num)
+            sheet[f'{col_letter}1'] = column_name
+
+        # Adjust the width of each column
+        for col_num in range(1, len(column_names) + 1):
+            col_letter = openpyxl.utils.get_column_letter(col_num)
+            sheet.column_dimensions[col_letter].width = 12
+
+        # Write data to the sheet
+        for row_num, row_data in enumerate(data, 2):
+            for col_num, cell_value in enumerate(row_data.values(), 1):
+                col_letter = openpyxl.utils.get_column_letter(col_num)
+                sheet[f'{col_letter}{row_num}'] = cell_value
+
+        # Generate the file name
+        file_name = f"report_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
+
+        # Save the workbook to a BytesIO buffer
+        buffer = io.BytesIO()
+        workbook.save(buffer)
+        buffer.seek(0)
+
+        # Create a FileResponse with the buffer data
+        response = FileResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="{file_name}"'
 
         return response
 
-    return render(request, 'template.html')
+    
+    
+    return Response({'status': 400})
 
-
-#hyper viewset by wrinting one classs we can do all CRUD operations and the id become url
 class employeehyperviewset(viewsets.ModelViewSet):
     queryset=Employee.objects.all()
     serializer_class=employeehyperserializer
@@ -146,6 +279,8 @@ class Employee_create(CreateModelMixin,GenericAPIView):
     queryset=Employee.objects.all()
     serializer_class=EmployeeSerializer
     def post(self,request):
+        print(type(request.data))
+        print(request.data,'@@@@@@@@@@@')
         return self.create(request) 
 
 class Employee_retrieve(RetrieveModelMixin,GenericAPIView):

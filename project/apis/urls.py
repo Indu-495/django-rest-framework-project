@@ -33,10 +33,10 @@ employee_hyper_router.register('employeehyper', views.employeehyperviewset, base
 
 urlpatterns = [
     #api view decorator
+    
+     path('generate_excel/', views.generate_excel, name='generate_excel'),
+
     path('', home),
-     path('generate-pdf/', views.generate_pdf, name='generate_pdf'),
-
-
     path('add/', employe_post),
     path('update/<int:id>', employe_update),
     path('delete/<int:id>', employe_delete),
@@ -70,6 +70,13 @@ urlpatterns = [
 
     # Auth URLs for login/logout (used in modal viewset)
     path('auth/', include('rest_framework.urls', namespace='rest_framework')),
+
+
+    #html page
+    path('list_html/',views.list_html),
+    path('create_html/',views.create_html,name='create_html'),
+    path('generate_excel_html/',views.generate_excel_html,name='generate_excel_html'),
+
 
 ]
 

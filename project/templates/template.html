@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Generate PDF</title>
+    <title>Generate Excel</title>
 </head>
 <body>
-    <h1>Generate PDF</h1>
-    <form action="{% url 'generate_pdf' %}" method="post">
+    <h1>Generate Excel</h1>
+    <form action="{% url 'generate_excel_html' %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <label for="from_date">From Date:</label>
         <input type="date" name="from_date" required><br><br>
@@ -15,10 +15,7 @@
         <label for="to_date">To Date:</label>
         <input type="date" name="to_date" required><br><br>
         
-        <label for="organisation">Organisation:</label>
-        <input type="text" name="organisation" required><br><br>
-        
-        <input type="submit" value="Generate PDF">
+        <input type="submit" value="Generate EXCEL">
     </form>
 </body>
 </html>

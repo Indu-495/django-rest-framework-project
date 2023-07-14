@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Data</title>
+</head>
+<body>
+    <table id="employeeTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Employee ID</th>
+                <th>Name</th>
+                <th>Month</th>
+                <th>PF Status</th>
+                <th>Gross</th>
+                <th>Net Days</th>
+                <th>Arrears</th>
+                <th>Shift Allowance</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        // Fetch the data from the API
+        fetch('http://127.0.0.1:8000/list/')
+            .then(response => response.json())
+            .then(data => {
+                const employeeTable = document.getElementById('employeeTable');
+
+                data.forEach(employee => {
+                    const row = document.createElement('tr');
+
+                    // Populate the row with data
+                    row.innerHTML = `
+                        <td>${employee.id}</td>
+                        <td>${employee.emp_id}</td>
+                        <td>${employee.name}</td>
+                        <td>${employee.month}</td>
+                        <td>${employee.pf_status}</td>
+                        <td>${employee.gross}</td>
+                        <td>${employee.net_days}</td>
+                        <td>${employee.arrears}</td>
+                        <td>${employee.shift_allowance}</td>
+                    `;
+
+                    // Append the row to the table body
+                    employeeTable.querySelector('tbody').appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.log('Error:', error);
+            });
+    </script>
+</body>
+</html>

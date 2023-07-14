@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Employee</title>
+</head>
+<body>
+    <h1>Create Employee</h1>
+    
+    <form action="{% url 'create_html' %}" method="post">
+        {% csrf_token %}
+        <label for="empId">Employee ID:</label>
+        <input type="text" id="empId" name="emp_id" required><br><br>
+        
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+        
+        <label for="month">Month:</label>
+        <input type="text" id="month" name="month" required><br><br>
+        
+        <label for="pfStatus">PF Status:</label>
+        <input type="text" id="pfStatus" name="pf_status" required><br><br>
+        
+        <label for="gross">Gross:</label>
+        <input type="text" id="gross" name="gross" required><br><br>
+        
+        <label for="netDays">Net Days:</label>
+        <input type="text" id="netDays" name="net_days" required><br><br>
+        
+        <label for="arrears">Arrears:</label>
+        <input type="text" id="arrears" name="arrears" required><br><br>
+        
+        <label for="shiftAllowance">Shift Allowance:</label>
+        <input type="text" id="shiftAllowance" name="shift_allowance" required><br><br>
+        
+        <input type="submit" value="Create">
+    </form>
+</body>
+</html>
