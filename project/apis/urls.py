@@ -32,10 +32,15 @@ employee_hyper_router.register('employeehyper', views.employeehyperviewset, base
 
 
 urlpatterns = [
-    #api view decorator
     
-     path('generate_excel/', views.generate_excel, name='generate_excel'),
+    #apis urls
+    path('generate_excel/', views.generate_excel, name='generate_excel'),
+    path('upload_file/', EmployeeUploadView.as_view(), name='file-upload'),
+    path('update_employee/', EmployeeUpdateView.as_view(), name='update_employee'),
 
+
+
+    #api view decorator
     path('', home),
     path('add/', employe_post),
     path('update/<int:id>', employe_update),
@@ -76,6 +81,8 @@ urlpatterns = [
     path('list_html/',views.list_html),
     path('create_html/',views.create_html,name='create_html'),
     path('generate_excel_html/',views.generate_excel_html,name='generate_excel_html'),
+    path('upload_file_html/',views.upload_file_html,name='upload_file_html'),
+
 
 
 ]

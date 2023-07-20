@@ -1,9 +1,8 @@
 import io
 import os
 from django.shortcuts import render
-
-# Create your views here.
 from django.shortcuts import render
+import pandas as pd
 import requests
 from .models import *
 from .serializers import *
@@ -15,68 +14,111 @@ from rest_framework.generics import ListAPIView,CreateAPIView,RetrieveAPIView,Up
 from rest_framework import viewsets
 from rest_framework.authentication import BasicAuthentication,SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-
-# views.py
-
-from django.http import FileResponse, HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from reportlab.pdfgen import canvas
+from django.http import FileResponse, HttpResponse, JsonResponse, StreamingHttpResponse
 from datetime import datetime
-import openpyxl
-from openpyxl.utils import get_column_letter
-from openpyxl.drawing.image import Image
-
-import openpyxl
-from openpyxl.utils import get_column_letter
-from openpyxl.drawing.image import Image
-
 from django.http import HttpResponse
 from django.shortcuts import render
 from datetime import datetime
 from .models import CallReportMaster
 from django.shortcuts import render
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from rest_framework import status
+import pandas as pd
+
+class EmployeeUpdateView(UpdateAPIView):
+    queryset = Employee.objects.all()
+    serializer_class = EmployeeSerializer
+    lookup_field = 'emp_id'  # Field to use for lookup instead of the default 'pk'
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        (print(request.data,'*************************'))
+        return self.update(request, *args, **kwargs)
+
+
+def upload_file_html(request):
+    if request.method == 'POST':
+        url = 'http://127.0.0.1:8000/upload_file/'  # API endpoint URL
+        files = {'profiles': request.FILES['profiles']}  # Assuming 'profiles' is the key for the uploaded file
+
+        response = requests.post(url, files=files)
+        if response.status_code == 201:
+            return render(request, 'success.html')
+        else:
+            error_message = f"Error: {response.status_code}"
+            return render(request, 'error.html', {'error_message': error_message})
+    else:
+        return render(request, 'upload.html')
+
+
+class EmployeeUploadView(APIView):
+    def post(self, request, format=None):
+        # Check if the 'profiles' key exists in the request.FILES dictionary
+        print(request.FILES,'22222222222222222222222')
+        if 'profiles' not in request.FILES:
+            return Response({"error": "File 'profiles' is missing in the request."}, status=status.HTTP_400_BAD_REQUEST)
+
+        file = request.FILES['profiles']
+        df = pd.read_csv(file)
+
+        for _, row in df.iterrows():
+            employee_data = {
+                'emp_id': row[0],
+                'name': row[1],
+                'month': row[2],
+                'pf_status': row[3],
+                'gross': row[4],
+                'net_days': row[5],
+                'arrears': row[6],
+                'shift_allowance': row[7],
+            }
+            serializer = EmployeeSerializer(data=employee_data)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                # If any row data is invalid, return the errors with a bad request response
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'message': 'File uploaded and data saved successfully.'}, status=status.HTTP_201_CREATED)
 
 def create_html(request):
     if request.method == 'POST':
-        # Handle the form submission and API interaction
-        emp_id = request.POST.get('emp_id')
-        name = request.POST.get('name')
-        month = request.POST.get('month')
-        pf_status = request.POST.get('pf_status')
-        gross = request.POST.get('gross')
-        net_days = request.POST.get('net_days')
-        arrears = request.POST.get('arrears')
-        shift_allowance = request.POST.get('shift_allowance')
-
-        # Perform any necessary validation or data processing
-
-        # Call the API endpoint to create the employee
-        api_url = 'http://127.0.0.1:8000/create/'
-        payload = {
-            'emp_id': emp_id,
-            'name': name,
-            'month': month,
-            'pf_status': pf_status,
-            'gross': gross,
-            'net_days': net_days,
-            'arrears': arrears,
-            'shift_allowance': shift_allowance
+        form_data = {
+            'emp_id': request.POST.get('emp_id'),
+            'name': request.POST.get('name'),
+            'month': request.POST.get('month'),
+            'pf_status': request.POST.get('pf_status'),
+            'gross': request.POST.get('gross'),
+            'net_days': request.POST.get('net_days'),
+            'arrears': request.POST.get('arrears'),
+            'shift_allowance': request.POST.get('shift_allowance')
         }
 
-        response = requests.post(api_url, data=payload)
+        api_url = request.build_absolute_uri('/create/')
+        response = requests.post(api_url, data=form_data)
+
         if response.ok:
-            # Employee created successfully
             return render(request, 'create.html')
         else:
-            # Handle the API error
             error_message = 'An error occurred while creating the employee.'
             return render(request, 'error.html', {'message': error_message})
 
-    # If it's a GET request, simply render the HTML form
     return render(request, 'create.html')
-
-
-
 
 def list_html(request):
     return render(request,'list.html')
@@ -100,7 +142,7 @@ def generate_excel_html(request):
             file_name = response.headers['Content-Disposition'].split('=')[1].replace('"', '')
 
             # Define the directory where you want to save the Excel file
-            save_directory = 'C:/INDU/django_project/django rest framework project/'
+            save_directory = 'C:/INDU/django_project/'
 
             # Create the file path by joining the directory and file name
             file_path = os.path.join(save_directory, file_name)
@@ -120,10 +162,8 @@ def generate_excel_html(request):
         # Render the HTML template
         return render(request, 'template.html')
 
-
 @api_view(['POST'])
 def generate_excel(request):
-    print(request.data, request.method, "###############################")
     if request.method == 'POST':
         from_date = request.data.get('from_date')
         to_date = request.data.get('to_date')
@@ -134,52 +174,30 @@ def generate_excel(request):
             'date', 'time', 'location', 'latitude', 'longitude', 'area', 'city', 'state', 'pincode',
             'district', 'station', 'branch', 'source', 'attendance', 'reason', 'type', 'ldate', 'category', 'status'
         )
-        
-        # Create a new workbook and select the active sheet
-        workbook = openpyxl.Workbook()
-        sheet = workbook.active
 
-        # Set column names
-        column_names = [
-            'Sno', 'Emp ID', 'Ref Type', 'Unique ID', 'Name', 'Design', 'Contact', 'Camp', 'Camp Details', 'Date',
-            'Time', 'Location', 'Latitude', 'Longitude', 'Area', 'City', 'State', 'Pincode', 'District', 'Station',
-            'Branch', 'Source', 'Attendance', 'Reason', 'Type', 'Ldate', 'Category', 'Status',
-        ]
-
-        # Write column names to the first row of the sheet
-        for col_num, column_name in enumerate(column_names, 1):
-            col_letter = openpyxl.utils.get_column_letter(col_num)
-            sheet[f'{col_letter}1'] = column_name
-
-        # Adjust the width of each column
-        for col_num in range(1, len(column_names) + 1):
-            col_letter = openpyxl.utils.get_column_letter(col_num)
-            sheet.column_dimensions[col_letter].width = 12
-
-        # Write data to the sheet
-        for row_num, row_data in enumerate(data, 2):
-            for col_num, cell_value in enumerate(row_data.values(), 1):
-                col_letter = openpyxl.utils.get_column_letter(col_num)
-                sheet[f'{col_letter}{row_num}'] = cell_value
+        # Convert data to a pandas DataFrame
+        df = pd.DataFrame(data)
 
         # Generate the file name
         file_name = f"report_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
 
-        # Save the workbook to a BytesIO buffer
+        # Create a BytesIO buffer
         buffer = io.BytesIO()
-        workbook.save(buffer)
+
+        # Write the DataFrame to the Excel file in the buffer
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Sheet1')
+
+        # Seek to the beginning of the buffer
         buffer.seek(0)
 
-        # Create a FileResponse with the buffer data
-        response = FileResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        # Create a streaming response with the buffer data
+        response = StreamingHttpResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = f'attachment; filename="{file_name}"'
 
         return response
 
-    
-    
     return Response({'status': 400})
-
 class employeehyperviewset(viewsets.ModelViewSet):
     queryset=Employee.objects.all()
     serializer_class=employeehyperserializer

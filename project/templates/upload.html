@@ -1,0 +1,15 @@
+<!-- upload.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload File</title>
+</head>
+<body>
+    <h1>Upload File</h1>
+    <form method="post" enctype="multipart/form-data"action="{% url 'upload_file_html' %}">
+        {% csrf_token %}
+        <input type="file" name="profiles">
+        <input type="submit" value="Upload">
+    </form>
+</body>
+</html>

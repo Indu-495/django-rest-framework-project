@@ -10,3 +10,4 @@ class employeehyperserializer(serializers.HyperlinkedModelSerializer):
         model = Employee
         fields = '__all__'
         # [fields]
+
