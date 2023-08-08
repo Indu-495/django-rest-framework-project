@@ -1,18 +1,4 @@
 from django.db import models
-from django.contrib.auth.models import User
-from rest_framework.authtoken.models import Token
-
-from rest_framework.authtoken.models import Token
-from django.contrib.auth.models import User
-from django.utils import timezone
-class AuthTokenToken(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    key = models.CharField(max_length=40, unique=True)
-    created = models.DateTimeField(default=timezone.now)
-
-    def __str__(self):
-        return self.key
-
 
 # Create your models here.
 class Employee(models.Model):
@@ -60,7 +46,3 @@ class CallReportMaster(models.Model):
     class Meta:
         
         db_table = 'call_report_master'        
-
-
-
-        

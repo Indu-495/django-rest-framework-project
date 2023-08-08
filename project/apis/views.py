@@ -7,12 +7,12 @@ import requests
 from .models import *
 from .serializers import *
 from rest_framework.response import Response
-from rest_framework.decorators import api_view,permission_classes,authentication_classes
+from rest_framework.decorators import api_view
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import ListModelMixin,CreateModelMixin,RetrieveModelMixin,UpdateModelMixin,DestroyModelMixin
 from rest_framework.generics import ListAPIView,CreateAPIView,RetrieveAPIView,UpdateAPIView,DestroyAPIView,ListCreateAPIView,RetrieveUpdateAPIView,RetrieveDestroyAPIView,RetrieveUpdateDestroyAPIView
 from rest_framework import viewsets
-from rest_framework.authentication import BasicAuthentication,SessionAuthentication, TokenAuthentication
+from rest_framework.authentication import BasicAuthentication,SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.http import FileResponse, HttpResponse, JsonResponse, StreamingHttpResponse
 from datetime import datetime
@@ -27,45 +27,6 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
 import pandas as pd
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.authtoken.models import Token
-from rest_framework.response import Response
-from django.conf import settings
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from rest_framework.authtoken.models import Token
-from django.core.management.base import BaseCommand
-from django.contrib.auth import get_user_model
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.models import Token
-from rest_framework_simplejwt.authentication import JWTAuthentication
-
-for user in User.objects.all():
-    Token.objects.get_or_create(user=user)
-User = get_user_model()
-
-class Command(BaseCommand):
-    help = 'Create tokens for all existing users.'
-
-    def handle(self, *args, **options):
-        for user in User.objects.all():
-            Token.objects.get_or_create(user=user)
-        self.stdout.write(self.style.SUCCESS('Successfully created tokens for all users.'))
-
-
-class CustomAuthToken(ObtainAuthToken):
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data,
-                                           context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            'token': token.key,
-            'user_id': user.pk,
-            'password': user.password
-        })
 
 class EmployeeUpdateView(UpdateAPIView):
     queryset = Employee.objects.all()
@@ -291,7 +252,7 @@ class employeeviewset(viewsets.ViewSet):
             return Response({'status':400,"payload":serializers.errors})
 
 
-
+#APIView decorator
 @api_view(['GET'])
 def home(request):
     employee_obj=Employee.objects.all()
@@ -326,8 +287,6 @@ def employe_delete(request,id):
     return Response("Employee is deleted successfully")        
 
 # Mixin GenericAPIView
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
 class Employee_list(ListModelMixin,GenericAPIView):
     queryset=Employee.objects.all()
     serializer_class=EmployeeSerializer
@@ -363,9 +322,6 @@ class Employee_delete(DestroyModelMixin,GenericAPIView):
 
 
 #concrete generic view
-
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
 class employeelist(ListAPIView):
     queryset=Employee.objects.all()
     serializer_class=EmployeeSerializer

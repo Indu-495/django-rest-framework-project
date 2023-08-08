@@ -18,10 +18,7 @@ from django.urls import path,include
 from .views import *
 from apis import views
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+
 employee_router = DefaultRouter()
 employee_router.register('employee', views.employeeviewset, basename='employee')
 
@@ -35,11 +32,6 @@ employee_hyper_router.register('employeehyper', views.employeehyperviewset, base
 
 
 urlpatterns = [
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    
-    path('login/', CustomAuthToken.as_view()),
-
     
     #apis urls
     path('generate_excel/', views.generate_excel, name='generate_excel'),
