@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-ur3&s)%wx-d3uw#wk9u@$_c=d3e%d$h49((llp^!_3othlt63m
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['10.74.1.78']
 
 
 # Application definition
@@ -39,7 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'apis',
+    
 ]
 
 MIDDLEWARE = [
@@ -139,4 +141,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #     'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.BasicAuthentication'],
 #     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated']                                
 
+# }
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+        
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     )
+#     # 'DEFAULT_AUTHENTICATION_CLASSES': (
+#     #     'rest_framework.authentication.TokenAuthentication',
+#     # ),
+#     # 'DEFAULT_PERMISSION_CLASSES': [
+#     #     'rest_framework.permissions.IsAuthenticated'
+#     # ]
 # }
