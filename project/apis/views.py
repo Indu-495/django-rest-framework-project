@@ -156,6 +156,7 @@ def create_html(request):
         else:
             error_message = 'An error occurred while creating the employee.'
             return render(request, 'error.html', {'message': error_message})
+        a==b
 
     return render(request, 'create.html')
 
